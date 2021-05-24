@@ -1,331 +1,290 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/call_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/white">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.ciscowebex.androidsdk.phone.MediaRenderView
-        android:id="@+id/localView"
-        android:layout_width="60dp"
-        android:layout_height="80dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/border"
-        android:elevation="8dp"
-        app:layout_constraintRight_toRightOf="@+id/remoteView"
-        app:layout_constraintTop_toTopOf="@+id/remoteView" />
-
-    <com.ciscowebex.androidsdk.phone.MediaRenderView
-        android:id="@+id/screenShare"
-        android:layout_width="60dp"
-        android:layout_height="80dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/border"
-        android:elevation="8dp"
-        android:visibility="invisible"
-        app:layout_constraintRight_toRightOf="@+id/remoteView"
-        app:layout_constraintTop_toBottomOf="@+id/localView" />
-
-    <com.ciscowebex.androidsdk.phone.MediaRenderView
-        android:id="@+id/remoteView"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:layout_margin="8dp"
-        android:elevation="1dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/floatButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:elevation="2dp"
-        app:layout_constraintLeft_toLeftOf="@id/remoteView"
-        app:layout_constraintTop_toTopOf="@id/remoteView"
-        android:src="@mipmap/ic_window"
-        android:visibility="gone"/>
-
-    <ImageView
-        android:id="@+id/viewRemoteAvatar"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:layout_margin="8dp"
-        android:elevation="1dp"
-        android:visibility="gone"
-        android:scaleType="centerInside"
-        android:background="#ffffff"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <LinearLayout
-        android:id="@+id/view_bottom_bar"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:orientation="horizontal"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_height="match_parent"
+        android:paddingStart="@dimen/padding_normal"
+        android:paddingEnd="@dimen/padding_normal">
 
-        <TextView
-            android:id="@+id/tab_callcontrol"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Call Control"
-            android:textSize="14sp"
-            android:gravity="center" />
 
-        <TextView
-            android:id="@+id/tab_aux_video"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Auxiliary Videos"
-            android:textSize="14sp"
-            android:gravity="center" />
+        <ImageButton
+            android:id="@+id/ib_startCall"
+            android:layout_width="@dimen/icon_size_normal"
+            android:layout_height="@dimen/icon_size_normal"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/circle_filled_green"
+            android:padding="16dp"
+            app:srcCompat="@drawable/ic_call_white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/tab_participants"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Participants"
-            android:textSize="14sp"
-            android:gravity="center"/>
-    </LinearLayout>
-
-    <ScrollView
-        android:id="@+id/view_aux_videos_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:visibility="gone"
-        app:layout_constraintLeft_toLeftOf="@+id/remoteView"
-        app:layout_constraintTop_toBottomOf="@+id/remoteView"
-        app:layout_constraintBottom_toTopOf="@id/view_bottom_bar">
-        <LinearLayout
+        <!--Views for dial buttons-->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/dial_buttons_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-            <GridLayout
-                android:id="@+id/view_aux_videos"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:useDefaultMargins="true"
-                android:columnCount="2">
-            </GridLayout>
-        </LinearLayout>
-
-    </ScrollView>
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/view_participants"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        app:layout_constraintLeft_toLeftOf="@+id/remoteView"
-        app:layout_constraintTop_toBottomOf="@+id/remoteView"
-        app:layout_constraintBottom_toTopOf="@id/view_bottom_bar"
-        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-        android:scrollbars="vertical"
-        android:orientation="vertical"
-        android:visibility="gone"/>
-
-    <ScrollView
-        android:id="@+id/view_call_control"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/view_bottom_bar"
-        app:layout_constraintLeft_toLeftOf="@id/remoteView"
-        app:layout_constraintRight_toRightOf="@id/remoteView"
-        app:layout_constraintTop_toBottomOf="@+id/remoteView">
-
-        <android.support.constraint.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="8dp"
-            android:paddingEnd="16dp">
+            android:layout_marginBottom="@dimen/margin_normal"
+            app:layout_constraintBottom_toTopOf="@+id/ib_startCall"
+            app:layout_constraintTop_toBottomOf="@+id/et_dial_input"
+            app:layout_constraintVertical_bias="0.8"
+            tools:layout_editor_absoluteX="16dp">
 
             <TextView
-                android:id="@+id/labelCamera"
+                android:id="@+id/tv_number_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Camera"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <RadioGroup
-                android:id="@+id/radioGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp"
-                app:layout_constraintLeft_toLeftOf="@id/labelCamera"
-                app:layout_constraintTop_toBottomOf="@+id/labelCamera">
-                <RadioButton
-                    android:id="@+id/radioFrontCam"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="Front camera"
-                    app:layout_constraintLeft_toLeftOf="parent" />
-                <RadioButton
-                    android:id="@+id/radioBackCam"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Back camera"
-                    app:layout_constraintRight_toRightOf="parent" />
-            </RadioGroup>
-
-            <TextView
-                android:id="@+id/textSendVideo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sending Video"
-                android:layout_marginTop="8dp"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
-            <Switch
-                android:id="@+id/switchSendVideo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/textSendVideo" />
-
-
-            <TextView
-                android:id="@+id/textSendAudio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Sending Audio"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textSendVideo" />
-            <Switch
-                android:id="@+id/switchSendAudio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/textSendAudio" />
-
-            <TextView
-                android:id="@+id/textReceiveVideo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Receiving Video"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textSendAudio" />
-            <Switch
-                android:id="@+id/switchReceiveVideo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/textReceiveVideo" />
-
-            <TextView
-                android:id="@+id/textReceiveAudio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Receiving Audio"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textReceiveVideo" />
-            <Switch
-                android:id="@+id/switchReceiveAudio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/textReceiveAudio" />
-
-
-            <TextView
-                android:id="@+id/TextShareContent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Sharing Content"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textReceiveAudio" />
-            <Switch
-                android:id="@+id/switchShareContent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="false"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/TextShareContent" />
-
-
-            <TextView
-                android:id="@+id/TextLoudSpeaker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Loud speaker"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/TextShareContent" />
-            <Switch
-                android:id="@+id/switchLoudSpeaker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/TextLoudSpeaker" />
-
-            <include
-                layout="@layout/keypad"
-                android:id="@+id/keypad"
-                android:visibility="gone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_1"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_2"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <LinearLayout
-                android:id="@+id/linearLayout"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tv_number_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_2"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_1"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_3"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_1" />
+
+            <TextView
+                android:id="@+id/tv_number_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_3"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_2" />
+
+            <TextView
+                android:id="@+id/tv_number_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_4"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_5"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_number_1" />
+
+            <TextView
+                android:id="@+id/tv_number_5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_5"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_4"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_6"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_4" />
+
+            <TextView
+                android:id="@+id/tv_number_6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_6"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_5" />
+
+            <TextView
+                android:id="@+id/tv_number_7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_7"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_8"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_number_4" />
+
+            <TextView
+                android:id="@+id/tv_number_8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_8"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_7"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_9"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_7" />
+
+            <TextView
+                android:id="@+id/tv_number_9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_9"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_8"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_8" />
+
+            <TextView
+                android:id="@+id/tv_number_star"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_star"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintEnd_toStartOf="@+id/ll_number_0"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_number_7" />
+
+            <FrameLayout
+                android:id="@+id/ll_number_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/size_8dp"
+                android:orientation="vertical"
+                android:layout_marginRight="@dimen/size_8dp"
+                android:layout_marginStart="3dp"
+                android:background="@drawable/circle_filled_gray"
+                android:paddingStart="@dimen/padding_large"
+                android:paddingEnd="@dimen/padding_large"
+                android:paddingTop="23dp"
+                android:paddingBottom="11dp"
                 android:gravity="center"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_number_star"
+                app:layout_constraintEnd_toStartOf="@+id/tv_number_hash"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintTop_toBottomOf="@id/tv_number_8"
+                app:layout_constraintStart_toEndOf="@+id/tv_number_star">
+
+            <TextView
+                android:id="@+id/tv_number_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/circle_filled_gray"
+                android:text="@string/number_0"
+                android:textAppearance="@style/TextStyle.DialKeys" />
+
+            <TextView
+                android:id="@+id/tv_number_plus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/number_plus"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="30dp"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/TextLoudSpeaker"
-                android:orientation="horizontal">
-                <Button
-                    android:id="@+id/buttonHangup"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/holo_blue_light"
-                    android:text="Hangup"
-                    android:layout_marginEnd="16dp"
-                    android:textColor="@android:color/white" />
-                <Button
-                    android:id="@+id/buttonDTMF"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/holo_blue_light"
-                    android:enabled="false"
-                    android:layout_marginStart="16dp"
-                    android:text="DTMF"
-                    android:textColor="@android:color/white" />
-            </LinearLayout>
+                android:textSize="12sp"/>
 
-        </android.support.constraint.ConstraintLayout>
-    </ScrollView>
+            </FrameLayout>
 
-</android.support.constraint.ConstraintLayout>
+            <TextView
+                android:id="@+id/tv_number_hash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/circle_filled_gray"
+                android:padding="@dimen/padding_large"
+                android:text="@string/number_hash"
+                android:textAppearance="@style/TextStyle.DialKeys"
+                app:layout_constraintBottom_toBottomOf="@+id/ll_number_0"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/ll_number_0" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <EditText
+            android:id="@+id/et_dial_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="16dp"
+            android:background="@null"
+            android:hint="@string/tap_to_dial"
+            android:singleLine="true"
+            android:gravity="center"
+            android:text=""
+            android:textSize="@dimen/textLarge"
+            android:inputType="textWebEmailAddress"
+            app:layout_constraintEnd_toStartOf="@+id/ib_backspace"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toggle_buttons_container" />
+
+        <ImageButton
+            android:id="@+id/ib_backspace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_backspace"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="32dp"
+            app:layout_constraintBottom_toBottomOf="@+id/et_dial_input"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toggle_buttons_container" />
+
+        <ViewSwitcher
+            android:id="@+id/toggle_buttons_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+
+            <ImageButton
+                android:id="@+id/ib_keypad_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_keyboard" />
+
+            <ImageButton
+                android:id="@+id/ib_numpad_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_dialpad" />
+        </ViewSwitcher>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
