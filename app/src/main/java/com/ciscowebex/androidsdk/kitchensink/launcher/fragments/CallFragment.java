@@ -24,6 +24,7 @@
 package com.ciscowebex.androidsdk.kitchensink.launcher.fragments;
 
 
+import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -34,6 +35,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
@@ -43,8 +46,10 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Pair;
 import android.util.Rational;
 import android.view.LayoutInflater;
@@ -52,13 +57,16 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.kitchensink.R;
 import com.ciscowebex.androidsdk.kitchensink.actions.WebexAgent;
 import com.ciscowebex.androidsdk.kitchensink.actions.commands.AddCallHistoryAction;
@@ -73,6 +81,7 @@ import com.ciscowebex.androidsdk.kitchensink.actions.events.OnConnectEvent;
 import com.ciscowebex.androidsdk.kitchensink.actions.events.OnDisconnectEvent;
 import com.ciscowebex.androidsdk.kitchensink.actions.events.OnMediaChangeEvent;
 import com.ciscowebex.androidsdk.kitchensink.actions.events.OnRingingEvent;
+import com.ciscowebex.androidsdk.kitchensink.actions.events.OnWaitingEvent;
 import com.ciscowebex.androidsdk.kitchensink.actions.events.PermissionAcquiredEvent;
 import com.ciscowebex.androidsdk.kitchensink.launcher.LauncherActivity;
 import com.ciscowebex.androidsdk.kitchensink.service.AwakeService;
@@ -86,6 +95,7 @@ import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MediaRenderView;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
+import com.ciscowebex.androidsdk.phone.internal.CallImpl;
 import com.github.benoitdion.ln.Ln;
 import com.squareup.picasso.Picasso;
 
@@ -182,7 +192,17 @@ public class CallFragment extends BaseFragment {
     @BindView(R.id.floatButton)
     ImageView floatButton;
 
+    @BindView(R.id.tab_callcontrol)
+    TextView tabCallControl;
+
+    @BindView(R.id.tab_aux_video)
+    TextView tabAuxVideo;
+
+    @BindView(R.id.tab_participants)
+    TextView tabParticipants;
+
     private ParticipantsAdapter participantsAdapter;
+    private Snackbar snackbar;
 
     // Required empty public constructor
 
@@ -219,11 +239,34 @@ public class CallFragment extends BaseFragment {
     @Override
     public void onStart() {
         super.onStart();
+        Drawable drawableCallControl = getResources().getDrawable(R.drawable.ic_file_word, null);
+        Drawable drawableAuxVideo = getResources().getDrawable(R.drawable.ic_file_excel, null);
+        Drawable drawableParticipants = getResources().getDrawable(R.drawable.ic_file_zip, null);
+        Rect bounds = new Rect(0, 0, 120, 120);
+        drawableCallControl.setBounds(bounds);
+        drawableAuxVideo.setBounds(bounds);
+        drawableParticipants.setBounds(bounds);
+        tabCallControl.setCompoundDrawables(null, drawableCallControl, null, null);
+        tabAuxVideo.setCompoundDrawables(null, drawableAuxVideo, null, null);
+        tabParticipants.setCompoundDrawables(null, drawableParticipants, null, null);
+
         agent = WebexAgent.getInstance();
         screenSwitcher = new FullScreenSwitcher(getActivity(), layout, remoteView);
         updateScreenShareView();
         if (participantsAdapter == null) {
             participantsAdapter = new ParticipantsAdapter(null);
+            participantsAdapter.setOnLetInClickListener(new ParticipantsAdapter.OnLetInClickListener() {
+                @Override
+                public void onLetInClick(ParticipantsAdapter.CallMembershipEntity entity) {
+                    for (CallMembership callMembership : agent.getActiveCall().getMemberships()) {
+                        if (callMembership.getPersonId().equals(entity.getPersonId())) {
+                            agent.getActiveCall().letIn(callMembership);
+                            break;
+                        }
+                    }
+
+                }
+            });
             viewParticipants.setAdapter(participantsAdapter);
         }
         if (!isConnected) {
@@ -349,6 +392,9 @@ public class CallFragment extends BaseFragment {
                 if (s.isChecked())
                     agent.getActiveCall().startSharing(r -> {
                         Ln.d("startSharing result: " + r);
+                        if (!r.isSuccessful()) {
+                            switchShareContent.setChecked(false);
+                        }
                     });
                 else
                     agent.getActiveCall().stopSharing(r -> {
@@ -361,7 +407,7 @@ public class CallFragment extends BaseFragment {
 
     @OnCheckedChanged(R.id.switchLoudSpeaker)
     public void onSwitchLoudSpeakerChanged(Switch s) {
-        new ToggleSpeakerAction(getActivity(), s.isChecked()).execute();
+        new ToggleSpeakerAction(getActivity(), (CallImpl) agent.getActiveCall(), s.isChecked()).execute();
     }
 
     @OnClick(R.id.radioBackCam)
@@ -479,11 +525,11 @@ public class CallFragment extends BaseFragment {
 
         if (callee.equals(INCOMING_CALL)) {
             setButtonsEnable(false);
-            agent.answer(localView, remoteView, screenShare);
+            agent.answer(localView, remoteView, screenShare, false, null);
             return;
         }
 
-        agent.dial(callee, localView, remoteView, screenShare);
+        agent.dial(callee, localView, remoteView, screenShare, false, null);
         new AddCallHistoryAction(callee, "out").execute();
         setButtonsEnable(true);
     }
@@ -502,9 +548,66 @@ public class CallFragment extends BaseFragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(DialEvent event) {
         if (!event.isSuccessful()) {
-            Toast.makeText(getActivity(), "Dial failed!", Toast.LENGTH_SHORT).show();
-            feedback();
+            if (event.getError() != null && event.getError().getErrorCode() == WebexError.ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED.getCode()) {
+                showPasswordDialog();
+            } else if (event.getError() != null && event.getError().getErrorCode() == WebexError.ErrorCode.VIEW_H264_LICENSE.getCode()) {
+                Toast.makeText(getActivity(), "View license, stop dial", Toast.LENGTH_SHORT).show();
+                feedback();
+            } else {
+                Toast.makeText(getActivity(), "Dial failed!", Toast.LENGTH_SHORT).show();
+                feedback();
+            }
         }
+    }
+
+    private void showPasswordDialog() {
+        EditText etKey = new EditText(getActivity());
+        etKey.setHint("Host Key");
+        EditText etPassword = new EditText(getActivity());
+        etPassword.setHint("Meeting Password");
+        LinearLayout layout = new LinearLayout(getActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.addView(etKey);
+        layout.addView(etPassword);
+        new AlertDialog.Builder(getActivity())
+                .setTitle("Are you the host?")
+                .setMessage("If you are the host, please enter host key. Otherwise, enter the meeting password.")
+                .setView(layout)
+                .setPositiveButton("Confirm", (dialog, which) -> {
+                    String key = etKey.getText().toString();
+                    String password = etPassword.getText().toString();
+                    if (TextUtils.isEmpty(key) && TextUtils.isEmpty(password)) {
+                        Toast.makeText(getActivity(), "Please enter key or password.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (!TextUtils.isEmpty(key) && !TextUtils.isEmpty(password)) {
+                        Toast.makeText(getActivity(), "Please only enter key or password", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    boolean isModerator;
+                    String PIN;
+                    if (!TextUtils.isEmpty(key)) {
+                        isModerator = true;
+                        PIN = key;
+                    } else {
+                        isModerator = false;
+                        PIN = password;
+                    }
+                    String callee = getCallee();
+                    if (callee.isEmpty())
+                        return;
+                    if (callee.equals(INCOMING_CALL)) {
+                        setButtonsEnable(false);
+                        agent.answer(localView, remoteView, screenShare, isModerator, PIN);
+                        return;
+                    }
+                    agent.dial(callee, localView, remoteView, screenShare, isModerator, PIN);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    Toast.makeText(getActivity(), "Dial failed!", Toast.LENGTH_SHORT).show();
+                    feedback();
+                })
+                .show();
     }
 
     @SuppressWarnings("unused")
@@ -521,6 +624,17 @@ public class CallFragment extends BaseFragment {
     @SuppressWarnings("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(OnRingingEvent event) {
+    }
+
+    @SuppressWarnings("unused")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(OnWaitingEvent event) {
+        String text = "Waiting in lobby:" + event.waitReason.name();
+        if (snackbar != null) {
+            snackbar.setText(text);
+        } else
+            snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_INDEFINITE);
+        snackbar.show();
     }
 
     @SuppressWarnings("unused")
@@ -555,6 +669,8 @@ public class CallFragment extends BaseFragment {
                 return null;
             }
         });
+        if (snackbar != null)
+            snackbar.dismiss();
     }
 
     private void updateParticipants() {
@@ -564,9 +680,9 @@ public class CallFragment extends BaseFragment {
         Ln.d("updateParticipants: " + callMemberships.size());
         for (CallMembership membership : callMemberships) {
             String personId = membership.getPersonId();
-            if (membership.getState() != CallMembership.State.JOINED || personId == null || personId.isEmpty() || membership.getEmail() == null || membership.getEmail().isEmpty())
+            if (/*membership.getState() != CallMembership.State.JOINED || */personId == null || personId.isEmpty() || membership.getEmail() == null || membership.getEmail().isEmpty())
                 continue;
-            participantsAdapter.addItem(new ParticipantsAdapter.CallMembershipEntity(personId, membership.getEmail(), "", membership.isSendingAudio(), membership.isSendingVideo()));
+            participantsAdapter.addOrUpdateItem(new ParticipantsAdapter.CallMembershipEntity(personId, membership.getEmail(), "", membership.isSendingAudio(), membership.isSendingVideo(), membership.getState()));
             agent.getWebex().people().get(personId, r -> {
                 if (r == null || !r.isSuccessful() || r.getData() == null) return;
                 mIdPersonMap.put(personId, r.getData());
@@ -619,10 +735,12 @@ public class CallFragment extends BaseFragment {
             mIdPersonMap.clear();
             feedback();
         }
+        if (snackbar != null)
+            snackbar.dismiss();
     }
 
     @SuppressWarnings("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(OnMediaChangeEvent event) {
         if (event.callEvent instanceof RemoteSendingSharingEvent) {
             Ln.d("RemoteSendingSharingEvent: " + ((RemoteSendingSharingEvent) event.callEvent).isSending());
@@ -772,7 +890,7 @@ public class CallFragment extends BaseFragment {
             Ln.d("MembershipJoinedEvent: ");
             if (membership.getState() != CallMembership.State.JOINED || personId == null || personId.isEmpty() || membership.getEmail() == null || membership.getEmail().isEmpty())
                 return;
-            participantsAdapter.addItem(new ParticipantsAdapter.CallMembershipEntity(personId, membership.getEmail(), "", membership.isSendingAudio(), membership.isSendingVideo()));
+            participantsAdapter.addOrUpdateItem(new ParticipantsAdapter.CallMembershipEntity(personId, membership.getEmail(), "", membership.isSendingAudio(), membership.isSendingVideo(), membership.getState()));
             agent.getWebex().people().get(personId, r -> {
                 if (r == null || !r.isSuccessful() || r.getData() == null) return;
                 updatePersonInfoForParticipants(personId, r.getData());
@@ -809,6 +927,23 @@ public class CallFragment extends BaseFragment {
                         }
                     }
                 }
+            }
+        } else if (event.callEvent instanceof CallObserver.MembershipWaitingEvent) {
+            Ln.d("MembershipJoinedLobbyEvent: ");
+            if (membership.getState() != CallMembership.State.WAITING || personId == null || personId.isEmpty() || membership.getEmail() == null || membership.getEmail().isEmpty())
+                return;
+            participantsAdapter.addOrUpdateItem(new ParticipantsAdapter.CallMembershipEntity(personId, membership.getEmail(), "", membership.isSendingAudio(), membership.isSendingVideo(), membership.getState()));
+            agent.getWebex().people().get(personId, r -> {
+                if (r == null || !r.isSuccessful() || r.getData() == null) return;
+                Ln.d("people: " + r.getData());
+                updatePersonInfoForParticipants(personId, r.getData());
+            });
+        } else if (event.callEvent instanceof CallObserver.MembershipAudioMutedControlledEvent) {
+            Ln.d("MembershipAudioMutedControlledEvent: ");
+            Ln.d(membership.getPersonId() + (membership.isAudioMutedControlled() ? " muted by " : " unmuted by ") + membership.audioModifiedBy());
+            if (membership.audioModifiedBy() != null) {
+                String text = membership.getEmail() + (membership.isAudioMutedControlled() ? " muted" : " unmuted") + " by others";
+                toast(text);
             }
         }
     }

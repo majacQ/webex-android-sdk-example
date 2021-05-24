@@ -156,29 +156,32 @@ public class WebexAgent {
     public MessageClient getMessageClient() {
         return webex.messages();
     }
-    public MembershipClient getMembershipClient(){
-        return webex.memberships();
-    }
-    public SpaceClient getSpaceClient(){
+
+    public SpaceClient getSpaceClient() {
         return webex.spaces();
     }
+
+    public MembershipClient getMembershipClient() {
+        return webex.memberships();
+    }
+
     public void downloadThumbnail(RemoteFile file, File saveTo, MessageClient.ProgressHandler handler, CompletionHandler<Uri> completionHandler) {
-        getMessageClient().downloadThumbnail(file,  saveTo, handler, completionHandler);
+        getMessageClient().downloadThumbnail(file, saveTo, handler, completionHandler);
     }
 
     public void downloadFile(RemoteFile file, File saveTo, MessageClient.ProgressHandler handler, CompletionHandler<Uri> completionHandler) {
         getMessageClient().downloadFile(file, saveTo, handler, completionHandler);
     }
 
-    public void dial(String callee, View localView, View remoteView, View screenSharing) {
+    public void dial(String callee, View localView, View remoteView, View screenSharing, boolean isModerator, @Nullable String pin) {
         isDialing = true;
-        phone.dial(callee, getMediaOption(localView, remoteView, screenSharing), (Result<Call> result) -> {
+        phone.dial(callee, getMediaOption(localView, remoteView, screenSharing, isModerator, pin), (Result<Call> result) -> {
             if (result.isSuccessful()) {
                 activeCall = result.getData();
                 if (!isDialing || activeCall == null) {
                     hangup();
                 } else {
-                    if (activeCall != null) activeCall.setObserver(callObserver);
+                    activeCall.setObserver(callObserver);
                 }
             }
             isDialing = false;
@@ -186,11 +189,15 @@ public class WebexAgent {
         });
     }
 
-    private MediaOption getMediaOption(View localView, View remoteView, View screenSharing) {
+    private MediaOption getMediaOption(View localView, View remoteView, View screenSharing, boolean isModerator, String pin) {
+        MediaOption mediaOption;
         if (callCap.equals(CallCap.AUDIO_ONLY))
-            return MediaOption.audioOnly();
+            mediaOption = MediaOption.audioOnly();
         else
-            return MediaOption.audioVideoSharing(new Pair<>(localView, remoteView), screenSharing);
+            mediaOption = MediaOption.audioVideoSharing(new Pair<>(localView, remoteView), screenSharing);
+        mediaOption.setModerator(isModerator);
+        mediaOption.setPin(pin);
+        return mediaOption;
     }
 
     public void reject() {
@@ -206,16 +213,16 @@ public class WebexAgent {
         }
     }
 
-    public void answer(View localView, View remoteView, View screenShare) {
+    public void answer(View localView, View remoteView, View screenShare, boolean isModerator, @Nullable String pin) {
         if (isCallIncoming()) {
             activeCall = incomingCall;
             incomingCall = null;
             activeCall.setObserver(callObserver);
-            activeCall.answer(getMediaOption(localView, remoteView, screenShare), r -> new AnswerEvent(r).post());
+            activeCall.answer(getMediaOption(localView, remoteView, screenShare, isModerator, pin), r -> new AnswerEvent(r).post());
         }
     }
 
-    public void setVideoRenderViews(@Nullable Pair<View, View> videoRenderViews){
+    public void setVideoRenderViews(@Nullable Pair<View, View> videoRenderViews) {
         activeCall.setVideoRenderViews(videoRenderViews);
     }
 
@@ -308,5 +315,31 @@ public class WebexAgent {
             return activeCall.isRemoteSendingSharing();
         }
         return false;
+    }
+
+    public void enableAudioBNR(boolean enable) {
+        if (phone != null) {
+            phone.enableAudioBNR(enable);
+        }
+    }
+
+    public boolean isAudioBNREnable() {
+        if (phone != null) {
+            return phone.isAudioBNREnable();
+        }
+        return false;
+    }
+
+    public void setAudioBNRMode(Phone.AudioBRNMode mode) {
+        if (phone != null) {
+            phone.setAudioBNRMode(mode);
+        }
+    }
+
+    public Phone.AudioBRNMode getAudioBNRMode() {
+        if (phone != null) {
+            return phone.getAudioBNRMode();
+        }
+        return null;
     }
 }

@@ -25,6 +25,7 @@ package com.ciscowebex.androidsdk.kitchensink.launcher.fragments;
 
 import android.content.Intent;
 
+import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.kitchensink.R;
 import com.ciscowebex.androidsdk.kitchensink.actions.commands.LogoutAction;
 import com.ciscowebex.androidsdk.kitchensink.actions.events.LogoutEvent;
@@ -33,6 +34,7 @@ import com.ciscowebex.androidsdk.kitchensink.login.LoginActivity;
 import com.ciscowebex.androidsdk.kitchensink.ui.BaseFragment;
 
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.OnClick;
 
@@ -84,13 +86,17 @@ public class LauncherFragment extends BaseFragment {
     }
 
     @SuppressWarnings("unused")
-    @Subscribe
-    public void onEventMainThread(LogoutEvent event) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(LogoutEvent event) {
         dismissBusyIndicator();
-        toast("Logout success");
-        Intent i = new Intent(getActivity(), LoginActivity.class);
-        i.setFlags(FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(i);
-        getActivity().finish();
+        if (event.isSuccessful() || (event.getError()!= null && event.getError().getErrorCode() == WebexError.ErrorCode.NETWORK_ERROR.getCode())) {
+            toast("Logout success");
+            Intent i = new Intent(getActivity(), LoginActivity.class);
+            i.setFlags(FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(i);
+            getActivity().finish();
+        } else {
+            toast("Logout fail");
+        }
     }
 }
